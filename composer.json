@@ -1,0 +1,20 @@
+{
+    "name": "erfanmomeniii/mini-bank",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "ErfanMomeniii\\MiniBank\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "ErfanMomeniii",
+            "email": "erfamm5@gmail.com"
+        }
+    ],
+    "require": {
+        "ext-pdo": "*",
+        "ext-pdo_pgsql": "*",
+        "robmorgan/phinx": "^0.16"
+    }
+}
