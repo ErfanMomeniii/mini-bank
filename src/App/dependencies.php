@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use DI\Container;
 use ErfanMomeniii\MiniBank\Controller\AccountController;
 use ErfanMomeniii\MiniBank\Controller\CurrencyController;
 use ErfanMomeniii\MiniBank\Controller\TransactionController;
@@ -23,32 +24,34 @@ use function DI\autowire;
 use function DI\factory;
 
 return [
-    PDO::class => factory(fn() => Connection::getInstance()),
+    PDO::class => factory(
+        fn() => Connection::getInstance()
+    ),
 
     CurrencyRepositoryInterface::class => autowire(CurrencyRepository::class),
-    UserRepositoryInterface::class     => autowire(UserRepository::class),
+    UserRepositoryInterface::class => autowire(UserRepository::class),
 
     AccountRepositoryInterface::class => factory(
-        fn(\DI\Container $c) => new AccountRepository(
+        fn(Container $c) => new AccountRepository(
             $c->get(PDO::class),
             $c->get(CurrencyRepositoryInterface::class),
         )
     ),
 
     TransactionRepositoryInterface::class => factory(
-        fn(\DI\Container $c) => new TransactionRepository(
+        fn(Container $c) => new TransactionRepository(
             $c->get(PDO::class),
             $c->get(CurrencyRepositoryInterface::class),
         )
     ),
 
-    CurrencyService::class    => autowire(),
-    UserService::class        => autowire(),
-    AccountService::class     => autowire(),
+    CurrencyService::class => autowire(),
+    UserService::class => autowire(),
+    AccountService::class => autowire(),
     TransactionService::class => autowire(),
 
-    UserController::class        => autowire(),
-    CurrencyController::class    => autowire(),
-    AccountController::class     => autowire(),
+    UserController::class => autowire(),
+    CurrencyController::class => autowire(),
+    AccountController::class => autowire(),
     TransactionController::class => autowire(),
 ];

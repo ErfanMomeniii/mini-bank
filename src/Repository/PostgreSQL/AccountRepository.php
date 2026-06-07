@@ -14,8 +14,8 @@ use ReflectionProperty;
 class AccountRepository implements AccountRepositoryInterface
 {
     public function __construct(
-        private PDO                         $pdo,
-        private CurrencyRepositoryInterface $currencyRepository,
+        private PDO                                  $pdo,
+        private readonly CurrencyRepositoryInterface $currencyRepository,
     ) {
     }
 
