@@ -4,62 +4,79 @@ declare(strict_types=1);
 
 namespace ErfanMomeniii\MiniBank\Controller;
 
+use ErfanMomeniii\MiniBank\DTO\CreateUserRequest;
+use ErfanMomeniii\MiniBank\DTO\UpdateUserRequest;
 use ErfanMomeniii\MiniBank\Model\User;
 use ErfanMomeniii\MiniBank\Service\UserService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 readonly class UserController
 {
-    public function __construct(private UserService $userService)
+    public function __construct(private UserService $userService, private ValidatorInterface $validator)
     {
     }
 
     public function index(Request $request, Response $response): Response
     {
         $users = array_map(fn(User $u) => $this->serialize($u), $this->userService->findAll());
+
         return $this->json($response, $users);
     }
 
     public function create(Request $request, Response $response): Response
     {
-        $body = $this->body($request);
+        $req = CreateUserRequest::fromArray($this->body($request));
+
+        $error = $this->validator->validate($req);
+        if (count($error) > 0) {
+            return $this->json($response, $error, 400);
+        }
+
         $user = $this->userService->create(
-            $body['phone_number'] ?? '',
-            $body['status'] ?? 'Active',
+            $req->phoneNumber, $req->status
         );
+
         return $this->json($response, $this->serialize($user), 201);
     }
 
     public function show(Request $request, Response $response, array $args): Response
     {
-        $user = $this->userService->findById((int) $args['id']);
+        $user = $this->userService->findById((int)$args['id']);
+
         return $this->json($response, $this->serialize($user));
     }
 
     public function update(Request $request, Response $response, array $args): Response
     {
-        $body = $this->body($request);
+        $req = UpdateUserRequest::fromArray($this->body($request));
+
+        $error = $this->validator->validate($req);
+        if (count($error) > 0) {
+            return $this->json($response, $error, 400);
+        }
+
         $user = $this->userService->update(
-            (int) $args['id'],
-            $body['phone_number'] ?? '',
-            $body['status'] ?? 'Active',
+            (int)$args['id'], $req->phoneNumber, $req->status
         );
+
         return $this->json($response, $this->serialize($user));
     }
 
     public function destroy(Request $request, Response $response, array $args): Response
     {
-        $this->userService->delete((int) $args['id']);
+        $this->userService->delete((int)$args['id']);
+
         return $response->withStatus(204);
     }
 
     private function serialize(User $user): array
     {
         return [
-            'id'           => $user->getId(),
+            'id' => $user->getId(),
             'phone_number' => $user->getPhoneNumber(),
-            'status'       => $user->getStatus()->value,
+            'status' => $user->getStatus()->value,
         ];
     }
 
@@ -71,6 +88,6 @@ readonly class UserController
 
     private function body(Request $request): array
     {
-        return (array) json_decode((string) $request->getBody(), true);
+        return (array)json_decode((string)$request->getBody(), true);
     }
 }
