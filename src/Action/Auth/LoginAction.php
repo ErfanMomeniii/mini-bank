@@ -4,31 +4,42 @@ declare(strict_types=1);
 
 namespace ErfanMomeniii\MiniBank\Action\Auth;
 
+use App\Domain\DTO\LoginRequest;
 use ErfanMomeniii\MiniBank\Domain\Exception\NotFoundException;
 use ErfanMomeniii\MiniBank\Domain\Repository\UserRepositoryInterface;
 use ErfanMomeniii\MiniBank\Responder\JsonResponder;
 use Firebase\JWT\JWT;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 final readonly class LoginAction
 {
     public function __construct(
         private UserRepositoryInterface $userRepository,
-        private JsonResponder $responder,
-        private string $jwtKey,
-    ) {
+        private ValidatorInterface      $validator,
+        private JsonResponder           $responder,
+        private string                  $jwtKey,
+    )
+    {
     }
 
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
+    public
+    function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
-        $body = (array) json_decode((string) $request->getBody(), true);
-        $phoneNumber = $body['phone_number'] ?? '';
+        $body = (array)json_decode((string)$request->getBody(), true);
+        $dto = LoginRequest::fromArray($body);
+
+        $errors = $this->validator->validate($dto);
+
+        if (count($errors) > 0) {
+            return $this->responder->json($response, ['errors' => (string)$errors], 400);
+        }
 
         $users = $this->userRepository->findAll();
         $user = null;
         foreach ($users as $u) {
-            if ($u->getPhoneNumber() === $phoneNumber) {
+            if ($u->getPhoneNumber() === $dto->phoneNumber) {
                 $user = $u;
                 break;
             }
